@@ -145,6 +145,34 @@ unsigned char led_state[LED_NUM_Y][LED_NUM_X] = {
   { 0, 0, 0, 0}
 };
 
+const unsigned char led_animation_table[4][LED_NUM_Y][LED_NUM_X] = {
+  {
+    { 0, 0, 0, 0},
+    { 0, 0, 0, 0},
+    { 0, 0, 0, 0},
+    { 0, 0, 0, 0}  
+  },
+  {
+    { 1, 0, 0, 1},
+    { 0, 0, 0, 0},
+    { 0, 0, 0, 0},
+    { 1, 0, 0, 1}  
+  },
+  {
+    { 0, 1, 1, 0},
+    { 1, 0, 0, 1},
+    { 1, 0, 0, 1},
+    { 0, 1, 1, 0}  
+  },
+  {
+    { 0, 0, 0, 0},
+    { 0, 1, 1, 0},
+    { 0, 1, 1, 0},
+    { 0, 0, 0, 0}  
+  }
+};
+
+
 // LEDカラム制御用変数
 int g_nLedCol = 0;
 
@@ -192,7 +220,10 @@ void KeyScanHandler()
   }
 }
 
-// LED制御ハンドラ
+// LED制御ハンドラ(100us)
+
+unsigned long g_nTimerCount = 1;
+char g_nAnimationCount = 0;
 
 void LedCtrlHandler()
 {
@@ -202,6 +233,20 @@ void LedCtrlHandler()
   digitalWrite(led_cols[g_nLedCol], HIGH);
   g_nLedCol++;
   g_nLedCol &= 0x03;
+
+  // 100msecごとにアニメーション用の制御関数を呼び出す
+  if ( g_nTimerCount % 500 == 0 ) {
+    if (g_nAnimationCount >= 0 ) {
+      for( int i=0; i<LED_NUM_Y; i++) {
+        for(int j=0; j<LED_NUM_X; j++) {
+          led_state[i][j] = led_animation_table[g_nAnimationCount][i][j];
+        }
+      }
+      g_nAnimationCount--;
+    }
+    g_nTimerCount = 0;
+  }
+  g_nTimerCount++;
 
   port_d = PORTD;
   port_c = PORTC;
@@ -341,6 +386,7 @@ void loop() {
         keycode = (key_code[i] >> 16) & 0xff;   Keyboard.release(keycode);
         keycode = (key_code[i] >> 8) & 0xff;    Keyboard.release(keycode);
         keycode = (key_code[i] >> 0) & 0xff;    Keyboard.release(keycode);
+        g_nAnimationCount = 3;
       }
     }
   }
