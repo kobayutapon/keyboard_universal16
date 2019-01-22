@@ -50,14 +50,63 @@ unsigned char led_cols[4] = {9,8,7,6};
 //  未割当の場合は0を割り当てる。とりあえず今はキー一つだけ。
 //
 // ---------------------------------------------------------------------------------
-const unsigned int key_code_preset1[KEY_NUM_MAX] = {KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, '1','2','3','4','5','6','7','8'};
-const unsigned int key_code_preset2[KEY_NUM_MAX] = {KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, 'A','B','C','D','E','F','G','H'};
+const unsigned long key_code_preset1[KEY_NUM_MAX] = {
+  KEY_F1, 
+  KEY_F2, 
+  KEY_F3, 
+  KEY_F4, 
+  KEY_F5, 
+  KEY_F6, 
+  KEY_F7, 
+  KEY_F8, 
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8'
+  };
+const unsigned long key_code_preset2[KEY_NUM_MAX] = {
+  KEY_F1, 
+  KEY_F2, 
+  KEY_F3, 
+  KEY_F4, 
+  KEY_F5, 
+  KEY_F6, 
+  KEY_F7, 
+  KEY_F8, 
+  'A',
+  'B',
+  'C',
+  'D',
+  'E',
+  'F',
+  'G',
+  'H'
+  };
 
-unsigned int key_code[KEY_NUM_MAX] = {
-  KEY_F1, KEY_F2, KEY_F3, KEY_F4, 
-  KEY_F5, KEY_F6, KEY_F7, KEY_F8, 
-  '5','6','7','8',
-  '1','2','3','4'
+
+// デフォルトのキーテーブル
+// とりあえず、VisualStudio2017で便利なようにした
+unsigned long key_code[KEY_NUM_MAX] = {
+  KEY_F1, 
+  KEY_F2, 
+  KEY_F3, 
+  KEY_F4, 
+  KEY_F5, 
+  KEY_F6, 
+  KEY_F7, 
+  KEY_F8, 
+  0x00818000 | 'B',       //  Build
+  KEY_F5,                 // Run
+  KEY_F10,                // Step over
+  KEY_F11,                // Step in
+  0x008182B3,             // KEY_LEFT_SHIFT << 16 |  KEY_LEFT_ALT  << 8 |  KEY_TAB,  
+  0x008180B3,             // KEY_LEFT_SHIFT << 16 |  KEY_LEFT_CTRL << 8 |  KEY_TAB,  
+  0x000080B3,             // KEY_LEFT_ALT  << 8 |  KEY_TAB,  
+  0x000082B3              // KEY_LEFT_CTRL << 8 |  KEY_TAB,  
 };
 
 // チャタリング除去用のバッファ
@@ -217,6 +266,9 @@ void setup() {
 
 void loop() {  
   // Key input check
+  unsigned long keycode;
+
+  // チャタリング除去
   for( int i=0; i < KEY_NUM_MAX; i++) {
     if (( key_buffer[i] & 0x0f) == 0x0f ){
       key_status_current[i] = KEY_INPUT_DEACTIVE;
@@ -224,12 +276,24 @@ void loop() {
       key_status_current[i] = KEY_INPUT_ACTIVE;
     }
   }
+
+  // キーイベントの発生
   for( int i=0; i<KEY_NUM_MAX; i++) {
     if ( key_status_before[i] != key_status_current[i] ){
       if ( key_status_current[i] == KEY_INPUT_ACTIVE) {
-        Keyboard.press(key_code[i]);
+
+        Serial.println(key_code[i]);
+        
+        keycode = (key_code[i] >> 24) & 0xff;   Keyboard.press(keycode);
+        keycode = (key_code[i] >> 16) & 0xff;   Keyboard.press(keycode);
+        keycode = (key_code[i] >> 8) & 0xff;    Keyboard.press(keycode);
+        keycode = (key_code[i] >> 0) & 0xff;    Keyboard.press(keycode);
+        
       } else {
-        Keyboard.release(key_code[i]);
+        keycode = (key_code[i] >> 24) & 0xff;   Keyboard.release(keycode);
+        keycode = (key_code[i] >> 16) & 0xff;   Keyboard.release(keycode);
+        keycode = (key_code[i] >> 8) & 0xff;    Keyboard.release(keycode);
+        keycode = (key_code[i] >> 0) & 0xff;    Keyboard.release(keycode);
       }
     }
   }
