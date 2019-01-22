@@ -380,5 +380,6 @@ void loop() {
       SetLed(1,0,false);
       SetLed(2,0,false);
       SetLed(3,0,true);
+    }
   } 
 }
