@@ -50,74 +50,99 @@ unsigned char led_cols[4] = {9,8,7,6};
 //  未割当の場合は0を割り当てる。とりあえず今はキー一つだけ。
 //
 // ---------------------------------------------------------------------------------
-const unsigned long key_code_preset1[KEY_NUM_MAX] = {
-  KEY_F1, 
-  KEY_F2, 
-  KEY_F3, 
-  KEY_F4, 
-  KEY_F5, 
-  KEY_F6, 
-  KEY_F7, 
-  KEY_F8, 
-  '1',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8'
-  };
-const unsigned long key_code_preset2[KEY_NUM_MAX] = {
-  KEY_F1, 
-  KEY_F2, 
-  KEY_F3, 
-  KEY_F4, 
-  KEY_F5, 
-  KEY_F6, 
-  KEY_F7, 
-  KEY_F8, 
-  'A',
-  'B',
-  'C',
-  'D',
-  'E',
-  'F',
-  'G',
-  'H'
-  };
+#define KEYTABLE_PRESET_NUM   4
+const unsigned long key_code_preset[KEYTABLE_PRESET_NUM][KEY_NUM_MAX] = {
+  {
+    // Preset1 for VisualStudio 2017
+    KEY_F1, 
+    KEY_F2, 
+    KEY_F3, 
+    KEY_F4, 
+    KEY_F5, 
+    KEY_F6, 
+    KEY_F7, 
+    KEY_F8, 
+    0x00818000 | 'B',       //  Build
+    KEY_F5,                 // Run
+    KEY_F10,                // Step over
+    KEY_F11,                // Step in
+    0x008182B3,             // KEY_LEFT_SHIFT << 16 |  KEY_LEFT_ALT  << 8 |  KEY_TAB,  
+    0x008180B3,             // KEY_LEFT_SHIFT << 16 |  KEY_LEFT_CTRL << 8 |  KEY_TAB,  
+    0x000080B3,             // KEY_LEFT_ALT  << 8 |  KEY_TAB,  
+    0x000082B3              // KEY_LEFT_CTRL << 8 |  KEY_TAB,  
+  },
+  {
+    // Preset 2:Android Studio
+    KEY_F1, 
+    KEY_F2, 
+    KEY_F3, 
+    KEY_F4, 
+    KEY_F5, 
+    KEY_F6, 
+    KEY_F7, 
+    KEY_F8, 
+    0x00008000 | KEY_F9,    // Build : KEY_LEFT_SHIFT | KEY_F9
+    0x00818200 | KEY_F9,    // Debug... : KEY_LEFT_SHIFT |  KEY_LEFT_ALT | KEY_F9,  
+    KEY_F7,                 // Step over
+    KEY_F8,                 // Step in
+    0x008182B3,             // KEY_LEFT_SHIFT << 16 |  KEY_LEFT_ALT  << 8 |  KEY_TAB,  
+    0x008180B3,             // KEY_LEFT_SHIFT << 16 |  KEY_LEFT_CTRL << 8 |  KEY_TAB,  
+    0x000080B3,             // KEY_LEFT_ALT  << 8 |  KEY_TAB,  
+    0x000082B3              // KEY_LEFT_CTRL << 8 |  KEY_TAB,  
+  },
+  {
+    // Preset 3
+    KEY_F1, 
+    KEY_F2, 
+    KEY_F3, 
+    KEY_F4, 
+    KEY_F5, 
+    KEY_F6, 
+    KEY_F7, 
+    KEY_F8, 
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8'
+  },
+  {
+    // Preset 4
+    KEY_F1, 
+    KEY_F2, 
+    KEY_F3, 
+    KEY_F4, 
+    KEY_F5, 
+    KEY_F6, 
+    KEY_F7, 
+    KEY_F8, 
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8'
+  }
 
-
-// デフォルトのキーテーブル
-// とりあえず、VisualStudio2017で便利なようにした
-unsigned long key_code[KEY_NUM_MAX] = {
-  KEY_F1, 
-  KEY_F2, 
-  KEY_F3, 
-  KEY_F4, 
-  KEY_F5, 
-  KEY_F6, 
-  KEY_F7, 
-  KEY_F8, 
-  0x00818000 | 'B',       //  Build
-  KEY_F5,                 // Run
-  KEY_F10,                // Step over
-  KEY_F11,                // Step in
-  0x008182B3,             // KEY_LEFT_SHIFT << 16 |  KEY_LEFT_ALT  << 8 |  KEY_TAB,  
-  0x008180B3,             // KEY_LEFT_SHIFT << 16 |  KEY_LEFT_CTRL << 8 |  KEY_TAB,  
-  0x000080B3,             // KEY_LEFT_ALT  << 8 |  KEY_TAB,  
-  0x000082B3              // KEY_LEFT_CTRL << 8 |  KEY_TAB,  
 };
+
+// カレントキーテーブル
+unsigned long key_code[KEY_NUM_MAX];
 
 // チャタリング除去用のバッファ
 volatile unsigned char key_buffer[KEY_NUM_MAX] = {0};
 
 // LED点灯状態設定
 unsigned char led_state[LED_NUM_Y][LED_NUM_X] = {
-  { 1, 1, 1, 1},
-  { 1, 1, 1, 1},
-  { 1, 1, 1, 1},
-  { 1, 1, 1, 1}
+  { 0, 0, 0, 0},
+  { 0, 0, 0, 0},
+  { 0, 0, 0, 0},
+  { 0, 0, 0, 0}
 };
 
 // LEDカラム制御用変数
@@ -128,6 +153,27 @@ int g_nLedCol = 0;
 void setKeyCol(int nLine);
 void KeyScanHandler();
 
+// Keytableをセットする
+void SetKeyTable(int nPreset)
+{
+  if ( nPreset < 0 || nPreset >= KEYTABLE_PRESET_NUM ) return;
+  
+  for( int i=0; i < KEY_NUM_MAX; i++) {
+    key_code[i] = key_code_preset[nPreset][i];
+  }
+}
+
+void SetLed(int x, int y, bool onoff)
+{
+  if ( x < 0 || x >= LED_NUM_X ) return;
+  if ( y < 0 || y >= LED_NUM_X ) return;
+  
+  if ( onoff == true ) {
+    led_state[y][x] = 1;
+  } else {
+    led_state[y][x] = 0;    
+  }
+}
 
 //
 //  10ms タイマーハンドラ
@@ -254,6 +300,9 @@ void setup() {
     key_status_before[i] = KEY_INPUT_DEACTIVE;
   }
 
+  SetKeyTable(0);
+  SetLed(0,0,true);
+
   Keyboard.begin();
 
   MsTimer2::set(10, KeyScanHandler);
@@ -281,8 +330,6 @@ void loop() {
   for( int i=0; i<KEY_NUM_MAX; i++) {
     if ( key_status_before[i] != key_status_current[i] ){
       if ( key_status_current[i] == KEY_INPUT_ACTIVE) {
-
-        Serial.println(key_code[i]);
         
         keycode = (key_code[i] >> 24) & 0xff;   Keyboard.press(keycode);
         keycode = (key_code[i] >> 16) & 0xff;   Keyboard.press(keycode);
@@ -309,12 +356,29 @@ void loop() {
     rcvcmd = Serial.read();
     if ( rcvcmd == '0' ) {
       Keyboard.releaseAll();
-      memcpy( key_code, key_code_preset1, sizeof(key_code));
+      SetKeyTable(0);
+      SetLed(0,0,true);
+      SetLed(1,0,false);
+      SetLed(2,0,false);
+      SetLed(3,0,false);
     } else if ( rcvcmd == '1' ) {
       Keyboard.releaseAll();
-      memcpy( key_code, key_code_preset2, sizeof(key_code));
-    } else if ( rcvcmd == 'A' ) {
-      
-    }
+      SetKeyTable(1);
+      SetLed(0,0,false);
+      SetLed(1,0,true);
+      SetLed(2,0,false);
+      SetLed(3,0,false);
+    } else if ( rcvcmd == '2' ) {
+      SetKeyTable(2);
+      SetLed(0,0,false);
+      SetLed(1,0,false);
+      SetLed(2,0,true);
+      SetLed(3,0,false);
+    }else if ( rcvcmd == '3' ) {
+      SetKeyTable(3);
+      SetLed(0,0,false);
+      SetLed(1,0,false);
+      SetLed(2,0,false);
+      SetLed(3,0,true);
   } 
 }
